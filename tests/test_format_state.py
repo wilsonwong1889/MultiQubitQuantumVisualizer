@@ -1,6 +1,6 @@
 from quantum.complex_number import Complex
 from quantum.gates import H, X, Y, Z
-from quantum.qubit import QubitState, apply_gate, ket0, ket1, ket_minus, ket_plus, simulate
+from quantum.state import QubitState, apply_gate, ket0, ket1, ket_minus, ket_plus, simulate
 from utils.format_state import (
     complex_latex,
     ket_latex,
@@ -16,7 +16,8 @@ def test_special_values_print_exactly():
     assert complex_latex(Complex(0.7071067811865475)) == r"\frac{1}{\sqrt{2}}"
     assert complex_latex(Complex(0, -1)) == "-i"
     assert complex_latex(Complex(0, 0.7071067811865475)) == r"\frac{i}{\sqrt{2}}"
-    assert complex_latex(Complex(0.5, -0.5)) == r"\frac{1}{2} - \frac{i}{2}"
+    assert complex_latex(Complex(0.5, -0.5)) == r"\frac{e^{-i\pi/4}}{\sqrt{2}}"   # the T gate's phase
+    assert complex_latex(Complex(0.3, 0.4)) == r"0.300 + 0.400i"
     assert complex_latex(Complex(0.123456)) == "0.123"
 
 
@@ -52,3 +53,20 @@ def test_state_chain_for_the_plan_example():
         r" = \frac{|0\rangle + |1\rangle}{\sqrt{2}} = |+\rangle"
     )
     assert state_chain_latex(states[3]).endswith(r"= -|-\rangle")
+
+
+def test_bell_state_is_recognised():
+    from quantum.circuit import Circuit, Operation, simulate_circuit
+    bell = simulate_circuit(Circuit(2, ("0", "0"), (Operation("H", (0,)), Operation("CNOT", (0, 1)))))[-1]
+    assert state_chain_latex(bell) == (
+        r"|\psi\rangle = \frac{1}{\sqrt{2}}|00\rangle + \frac{1}{\sqrt{2}}|11\rangle"
+        r" = \frac{|00\rangle + |11\rangle}{\sqrt{2}} = |\Phi^{+}\rangle"
+    )
+    assert recognise_state(bell).text == "|Φ⁺⟩"
+
+
+def test_t_gate_phase_prints_in_polar_form():
+    from quantum.gates import T
+    state = apply_gate(ket_plus(), T)
+    assert ket_latex(state) == r"\frac{1}{\sqrt{2}}|0\rangle + \frac{e^{i\pi/4}}{\sqrt{2}}|1\rangle"
+    assert ket_latex_factored(state) == r"\frac{|0\rangle + e^{i\pi/4}|1\rangle}{\sqrt{2}}"

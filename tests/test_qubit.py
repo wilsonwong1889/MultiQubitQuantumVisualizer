@@ -5,7 +5,7 @@ import pytest
 
 from quantum.complex_number import Complex
 from quantum.gates import GATES, H, X, Y, Z
-from quantum.qubit import (
+from quantum.state import (
     INITIAL_STATES,
     QubitState,
     apply_gate,

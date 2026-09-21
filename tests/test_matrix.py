@@ -1,5 +1,5 @@
 from quantum.complex_number import Complex, I, ONE, ZERO
-from quantum.matrix import IDENTITY, Matrix2x2
+from quantum.matrix import IDENTITY, Matrix, Matrix2x2
 
 
 def test_identity_leaves_vector_unchanged():
@@ -22,11 +22,27 @@ def test_matrix_product_and_conjugate_transpose():
     assert m.multiply(dagger).is_close(Matrix2x2(Complex(2), I, -I, ONE))
 
 
-def test_scale():
+def test_scale_and_entry():
     m = Matrix2x2(ONE, ONE, ONE, -ONE).scale(0.5)
-    assert m.a == Complex(0.5) and m.d == Complex(-0.5)
+    assert m.entry(0, 0) == Complex(0.5) and m.entry(1, 1) == Complex(-0.5)
 
 
 def test_is_unitary():
     assert IDENTITY.is_unitary()
     assert not Matrix2x2(ONE, ONE, ONE, ONE).is_unitary()
+
+
+def test_tensor_product_builds_two_qubit_operator():
+    x = Matrix2x2(ZERO, ONE, ONE, ZERO)
+    ix = IDENTITY.tensor(x)
+    assert ix.size == 4 and ix.num_qubits == 2
+    # I (x) X flips the second (rightmost) qubit: |00> -> |01>
+    out = ix.multiply_vector((ONE, ZERO, ZERO, ZERO))
+    assert out == (ZERO, ONE, ZERO, ZERO)
+    assert Matrix.identity(4).is_close(IDENTITY.tensor(IDENTITY))
+
+
+def test_matrix_must_be_square():
+    import pytest
+    with pytest.raises(ValueError):
+        Matrix(((ONE, ZERO),))

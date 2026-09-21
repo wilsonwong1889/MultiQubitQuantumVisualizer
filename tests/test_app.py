@@ -1,7 +1,7 @@
 """UI smoke tests using Streamlit's headless AppTest harness.
 
 These do not check pixels; they drive the real app script and assert that the
-session-state model (initial, gates, step) and the rendered maths stay in sync.
+session-state model (qubits, operations, step) and the rendered maths stay in sync.
 """
 from pathlib import Path
 
@@ -13,7 +13,7 @@ APP_PATH = str(Path(__file__).resolve().parent.parent / "app.py")
 
 @pytest.fixture
 def app():
-    at = AppTest.from_file(APP_PATH, default_timeout=30).run()
+    at = AppTest.from_file(APP_PATH, default_timeout=60).run()
     assert not at.exception
     return at
 
@@ -27,14 +27,15 @@ def _latex_text(at):
 
 
 def test_initial_render_shows_ket0(app):
-    assert app.session_state["gates"] == []
+    assert app.session_state["num_qubits"] == 1
+    assert app.session_state["ops"] == []
     assert app.session_state["step"] == 0
     assert r"|\psi_{0}\rangle = |0\rangle" in _latex_text(app)
 
 
 def test_add_gate_jumps_to_new_step_and_shows_matrix_calculation(app):
     app.button(key="add_H").click().run()
-    assert app.session_state["gates"] == ["H"]
+    assert app.session_state["ops"] == [("H", (0,))]
     assert app.session_state["step"] == 1
     text = _latex_text(app)
     assert r"H|\psi_{0}\rangle" in text
@@ -43,8 +44,8 @@ def test_add_gate_jumps_to_new_step_and_shows_matrix_calculation(app):
 
 
 def test_walkthrough_preset_and_step_navigation(app):
-    app.button(key="preset_hzx").click().run()
-    assert app.session_state["gates"] == ["H", "Z", "X"]
+    app.selectbox(key="preset_select").select("hzx").run()
+    assert app.session_state["ops"] == [("H", (0,)), ("Z", (0,)), ("X", (0,))]
     assert app.session_state["step"] == 3
     assert r"-|-\rangle" in _latex_text(app)
 
@@ -52,37 +53,76 @@ def test_walkthrough_preset_and_step_navigation(app):
     assert app.session_state["step"] == 2
     assert r"= |-\rangle" in _latex_text(app)
 
-    app.button(key="circuit_node_1").click().run()      # click the H node
-    assert app.session_state["step"] == 1
-    assert r"= |+\rangle" in _latex_text(app)
-
     _button(app, "Next ▶").click().run()
-    assert app.session_state["step"] == 2
+    assert app.session_state["step"] == 3
 
 
 def test_undo_and_reset(app):
-    app.button(key="preset_phase_flip").click().run()
+    app.selectbox(key="preset_select").select("phase_flip").run()
     _button(app, "↶ Undo gate").click().run()
-    assert app.session_state["gates"] == ["H"]
+    assert app.session_state["ops"] == [("H", (0,))]
     assert app.session_state["step"] == 1
     _button(app, "Reset").click().run()
-    assert app.session_state["gates"] == []
+    assert app.session_state["ops"] == []
     assert app.session_state["step"] == 0
 
 
-def test_every_initial_state_and_gate_renders_without_error(app):
+def test_every_single_qubit_gate_renders_from_every_initial_state(app):
     for initial in ("0", "1", "+", "-"):
-        app.radio(key="initial").set_value(initial).run()
-        for symbol in ("H", "X", "Y", "Z"):
+        app.session_state["init_0"] = initial
+        for symbol in ("H", "X", "Y", "Z", "S", "T"):
             app.button(key=f"add_{symbol}").click().run()
             assert not app.exception, app.exception
         _button(app, "Reset").click().run()
 
 
+def test_bell_state_preset_uses_two_qubits_and_recognises_phi_plus(app):
+    app.selectbox(key="preset_select").select("bell").run()
+    assert app.session_state["num_qubits"] == 2
+    assert app.session_state["ops"] == [("H", (0,)), ("CNOT", (0, 1))]
+    assert r"|\Phi^{+}\rangle" in _latex_text(app)
+    assert not app.exception
+
+
+def test_two_qubit_gates_use_the_selected_control_and_target(app):
+    app.selectbox(key="preset_select").select("independent").run()
+    app.session_state["ctrl"] = 1
+    app.session_state["tgt"] = 0
+    app.button(key="add_CNOT").click().run()
+    assert app.session_state["ops"][-1] == ("CNOT", (1, 0))
+    app.session_state["target"] = 1
+    app.button(key="add_T").click().run()
+    assert app.session_state["ops"][-1] == ("T", (1,))
+    assert not app.exception
+
+
+def test_measurement_experiment(app):
+    app.selectbox(key="preset_select").select("bell").run()
+    app.session_state["shots"] = 1000
+    app.button(key="measure_button").click().run()
+    result = app.session_state["measurement"]
+    assert result["shots"] == 1000
+    assert sum(result["counts"].values()) == 1000
+    assert result["counts"]["01"] == 0 and result["counts"]["10"] == 0
+    app.session_state["shots"] = 1
+    app.button(key="measure_button").click().run()
+    assert app.session_state["measurement"]["outcome"] in ("00", "11")
+    # editing the circuit invalidates the result
+    app.button(key="add_Z").click().run()
+    assert app.session_state["measurement"] is None
+
+
+def test_three_qubit_ghz_preset(app):
+    app.selectbox(key="preset_select").select("ghz").run()
+    assert app.session_state["num_qubits"] == 3
+    assert r"|000\rangle" in _latex_text(app) and r"|111\rangle" in _latex_text(app)
+    assert not app.exception
+
+
 def test_gate_limit_is_enforced(app):
-    for _ in range(10):
+    for _ in range(12):
         assert not app.button(key="add_X").disabled
         app.button(key="add_X").click().run()
-    assert len(app.session_state["gates"]) == 10
-    assert app.button(key="add_X").disabled          # no 11th gate
-    assert app.session_state["step"] == 10
+    assert len(app.session_state["ops"]) == 12
+    assert app.button(key="add_X").disabled          # no 13th gate
+    assert app.session_state["step"] == 12

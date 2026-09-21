@@ -18,6 +18,16 @@ class Complex:
     real: float = 0.0
     imag: float = 0.0
 
+    # --- constructors -----------------------------------------------------
+    @classmethod
+    def exp_i(cls, theta: float) -> Complex:
+        """e^{i theta} = cos(theta) + i sin(theta)."""
+        return cls(math.cos(theta), math.sin(theta))
+
+    @classmethod
+    def from_builtin(cls, z: complex) -> Complex:
+        return cls(z.real, z.imag)
+
     # --- arithmetic -------------------------------------------------------
     def add(self, other: Complex) -> Complex:
         return Complex(self.real + other.real, self.imag + other.imag)
@@ -77,10 +87,6 @@ class Complex:
 
     def __complex__(self) -> complex:
         return complex(self.real, self.imag)
-
-    @classmethod
-    def from_builtin(cls, z: complex) -> Complex:
-        return cls(z.real, z.imag)
 
 
 ZERO = Complex(0.0, 0.0)

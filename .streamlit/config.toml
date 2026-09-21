@@ -1,2 +1,13 @@
 [browser]
 gatherUsageStats = false
+
+[theme]
+base = "light"
+primaryColor = "#6C5CE7"
+backgroundColor = "#FFFFFF"
+secondaryBackgroundColor = "#F4F5FB"
+textColor = "#1F2937"
+linkColor = "#6C5CE7"
+font = "sans serif"
+baseRadius = "10px"
+borderColor = "#E3E6EF"
