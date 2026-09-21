@@ -25,6 +25,7 @@ Streamlit opens the site at <http://localhost:8501>.
 ## Run the tests
 
 ```bash
+pip install -r requirements-dev.txt
 pytest
 ```
 
@@ -80,6 +81,12 @@ Every Version-1 gate is a 180° rotation of the sphere (X, Y, Z about their own
 axis; H about the (x + z)/√2 diagonal). The animation sweeps the arrow along
 that rotation using Rodrigues' formula, and a test asserts that the geometric
 end point matches the algebraic one for every gate and named state.
+
+## Deploy to Streamlit Community Cloud
+
+The repo is ready for [Streamlit Community Cloud](https://share.streamlit.io):
+sign in with GitHub, choose **New app**, pick this repository, branch `main`,
+main file `app.py`, and deploy. Dependencies come from `requirements.txt`.
 
 ## Version 2 ideas (from the project plan)
 
