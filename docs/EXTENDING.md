@@ -1,4 +1,4 @@
-# Extending the Qubit Visualizer
+# Extending the Multi-Qubit Visualizer
 
 The app is built so that the three most likely next steps — more gates, more
 qubits, and richer measurements — are additions rather than rewrites. This

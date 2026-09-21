@@ -1,4 +1,4 @@
-"""Quantum engine for the Qubit Visualizer.
+"""Quantum engine for the Multi-Qubit Visualizer.
 
 Everything in this package is plain Python with no UI dependencies, so the
 Streamlit app (and the tests) simply ask the engine for a new state and then
