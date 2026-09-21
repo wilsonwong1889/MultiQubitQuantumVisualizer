@@ -1,5 +1,5 @@
 [project]
-name = "multi-qubit-visualizer"
+name = "multi-qubit-quantum-visualizer"
 version = "1.0.0"
 description = "Interactive single-qubit learning website: see how quantum gates transform a qubit."
 requires-python = ">=3.10"

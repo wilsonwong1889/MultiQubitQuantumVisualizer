@@ -1,4 +1,4 @@
-"""Multi-Qubit Visualizer — see how quantum gates transform qubits.
+"""Multi-Qubit Quantum Visualizer — see how quantum gates transform qubits.
 
 Run with:  streamlit run app.py
 
@@ -31,14 +31,14 @@ from quantum.circuit import simulate_circuit
 from quantum.state import BELL_STATES, NAMED_STATES
 from utils.format_state import complex_latex, coordinate_text
 
-st.set_page_config(page_title="Multi-Qubit Visualizer", page_icon="⚛️", layout="wide",
+st.set_page_config(page_title="Multi-Qubit Quantum Visualizer", page_icon="⚛️", layout="wide",
                    initial_sidebar_state="collapsed")
 
 
 def header() -> None:
     c_title, c_badge = st.columns([4, 1], vertical_alignment="center")
     with c_title:
-        st.title("⚛️ Multi-Qubit Visualizer")
+        st.title("⚛️ Multi-Qubit Quantum Visualizer")
         st.caption("See how quantum gates transform qubits — visually, algebraically, and on the Bloch sphere. "
                    "Build a circuit, then step through it one gate at a time.")
 
@@ -72,7 +72,7 @@ def reference_expanders() -> None:
         ))
     with st.expander("About this project"):
         st.markdown(
-            "**Multi-Qubit Visualizer** was made by **Wilson Wong**, an undergraduate in Computer Science researching "
+            "**Multi-Qubit Quantum Visualizer** was made by **Wilson Wong**, an undergraduate in Computer Science researching "
             "quantum computing, as a teaching tool for a Quantum Algorithms course. Pick initial states, "
             "add gates, and step through the circuit: the circuit, state vector, ket notation, gate matrix, "
             "matrix multiplication, measurement probabilities and Bloch spheres all update from the same "
@@ -89,8 +89,8 @@ def footer() -> None:
     st.markdown(
         "<div style='text-align:center;color:#64748B;font-size:0.9rem;line-height:1.6;padding:0.4rem 0 1rem 0'>"
         "Made by <strong>Wilson Wong</strong> — undergraduate in Computer Science, researching quantum computing.<br>"
-        "Multi-Qubit Visualizer · a Quantum Algorithms course project · "
-        "<a href='https://github.com/wilsonwong1889/QuantumVisualizer' target='_blank' style='color:#6C5CE7'>source on GitHub</a>"
+        "Multi-Qubit Quantum Visualizer · a Quantum Algorithms course project · "
+        "<a href='https://github.com/wilsonwong1889/MultiQubitQuantumVisualizer' target='_blank' style='color:#6C5CE7'>source on GitHub</a>"
         "</div>",
         unsafe_allow_html=True,
     )

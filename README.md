@@ -1,4 +1,4 @@
-# ⚛️ Multi-Qubit Visualizer
+# ⚛️ Multi-Qubit Quantum Visualizer
 
 An interactive learning website that shows what happens to qubits as they pass
 through quantum gates — visually, algebraically, and on the Bloch sphere.
@@ -59,7 +59,7 @@ a headless Streamlit `AppTest` smoke test that drives the real UI.
 ## Project structure
 
 ```
-multi-qubit-visualizer/
+MultiQubitQuantumVisualizer/
   app.py                      Streamlit entry point: page layout
   model.py                    Session state + callbacks (qubits, ops, step, measurement)
   quantum/                    Quantum engine (no UI dependencies)
