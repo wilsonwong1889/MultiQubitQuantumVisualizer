@@ -1,0 +1,17 @@
+[project]
+name = "qubit-visualizer"
+version = "1.0.0"
+description = "Interactive single-qubit learning website: see how quantum gates transform a qubit."
+requires-python = ">=3.10"
+dependencies = [
+    "streamlit>=1.49",
+    "plotly>=5.20",
+    "numpy>=1.26",
+]
+
+[project.optional-dependencies]
+test = ["pytest>=8"]
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+testpaths = ["tests"]
