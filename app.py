@@ -72,7 +72,8 @@ def reference_expanders() -> None:
         ))
     with st.expander("About this project"):
         st.markdown(
-            "**Qubit Visualizer** is a teaching tool built for a Quantum Algorithms course. Pick initial states, "
+            "**Qubit Visualizer** was made by **Wilson Wong**, an undergraduate in Computer Science researching "
+            "quantum computing, as a teaching tool for a Quantum Algorithms course. Pick initial states, "
             "add gates, and step through the circuit: the circuit, state vector, ket notation, gate matrix, "
             "matrix multiplication, measurement probabilities and Bloch spheres all update from the same "
             "underlying state.\n\n"
@@ -81,6 +82,18 @@ def reference_expanders() -> None:
             "(`tests/`) that verify the mathematics independently of the interface. See `docs/EXTENDING.md` "
             "for how to add gates, qubits or measurements."
         )
+
+
+def footer() -> None:
+    st.divider()
+    st.markdown(
+        "<div style='text-align:center;color:#64748B;font-size:0.9rem;line-height:1.6;padding:0.4rem 0 1rem 0'>"
+        "Made by <strong>Wilson Wong</strong> — undergraduate in Computer Science, researching quantum computing.<br>"
+        "Qubit Visualizer · a Quantum Algorithms course project · "
+        "<a href='https://github.com/wilsonwong1889/QuantumVisualizer' target='_blank' style='color:#6C5CE7'>source on GitHub</a>"
+        "</div>",
+        unsafe_allow_html=True,
+    )
 
 
 def main() -> None:
@@ -129,6 +142,7 @@ def main() -> None:
     with st.container(border=True):
         gate_panel.render(op.gate_object if op is not None else None)
     reference_expanders()
+    footer()
 
 
 if __name__ == "__main__":  # Streamlit runs the script as __main__

@@ -122,3 +122,7 @@ main file `app.py`, and deploy. Dependencies come from `requirements.txt`.
 See [docs/EXTENDING.md](docs/EXTENDING.md) for adding gates (one registry
 entry), more qubits (one constant), and measurement features (the
 `quantum/measurement.py` building blocks).
+
+## Author
+
+Made by **Wilson Wong** — undergraduate in Computer Science, researching quantum computing.
