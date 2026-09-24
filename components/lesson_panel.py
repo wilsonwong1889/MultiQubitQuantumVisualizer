@@ -1,4 +1,4 @@
-"""The Bell-state lesson view."""
+"""The Learn view: one tab per curriculum module."""
 from __future__ import annotations
 
 import streamlit as st
@@ -6,7 +6,9 @@ import streamlit as st
 import model
 from components.circuit import circuit_svg
 from components.widgets import section
-from data.lesson import BELL_RECIPES, SECTIONS, bell_circuit
+from data.curriculum import MODULES
+from data.lesson import BELL_RECIPES, bell_circuit
+from data.practice import questions_for
 from quantum.bloch import bloch_vector, length
 from utils.format_state import ket_vert, table_cell
 
@@ -35,7 +37,7 @@ def _bell_table() -> None:
     st.markdown("\n".join(rows))
 
 
-def _section(sec, index: int, total: int) -> None:
+def _section(sec, module_key: str, index: int) -> None:
     with st.container(border=True):
         section(sec.icon, f"{index}. {sec.title}")
         st.markdown(sec.body)
@@ -46,7 +48,7 @@ def _section(sec, index: int, total: int) -> None:
         if sec.circuit is not None:
             _circuit_preview(sec.circuit)
             st.button(
-                f"▶ {sec.try_it_label}", key=f"lesson_try_{sec.key}",
+                f"▶ {sec.try_it_label}", key=f"lesson_try_{module_key}_{sec.key}",
                 on_click=model.load_circuit_spec,
                 args=(sec.circuit, f"**From the lesson — {sec.title}.** {sec.takeaway}"),
                 help="Loads this circuit in the Explore view so you can step through it.",
@@ -55,29 +57,38 @@ def _section(sec, index: int, total: int) -> None:
             st.success(f"**Takeaway:** {sec.takeaway}", icon="🔑")
 
 
-def render() -> None:
-    st.markdown("## 📘 Lesson: Bell states")
-    st.caption(
-        "The four maximally entangled two-qubit states — how to build them, why they cannot be "
-        "taken apart, and what happens when you measure them. Every circuit here opens in the "
-        "Explore view so you can watch it happen."
-    )
+def _module_page(module) -> None:
+    st.markdown(f"### {module.icon} {module.number}. {module.title}")
+    st.caption(module.summary)
 
-    phi_plus = bell_circuit(("0", "0")).final_state()
+    questions = questions_for(module.key)
+    correct, answered = model.module_score(module.key)
     c1, c2, c3 = st.columns(3)
     with c1:
-        st.metric("Bell states", "4", help="They form an orthonormal basis for the two-qubit space.")
+        st.metric("Sections", len(module.sections))
     with c2:
-        st.metric("Gates needed", "2", help="One Hadamard and one CNOT.")
+        st.metric("Practice questions", len(questions))
     with c3:
-        st.metric("Bloch arrow length", f"{length(bloch_vector(phi_plus, 0)):.2f}",
-                  help="Each qubit of a Bell pair has no state of its own.")
+        st.metric("Your score", f"{correct} / {answered}" if answered else "—",
+                  help="Correct answers out of the questions you have checked in this module.")
 
-    for i, sec in enumerate(SECTIONS, start=1):
-        _section(sec, i, len(SECTIONS))
+    for i, sec in enumerate(module.sections, start=1):
+        _section(sec, module.key, i)
 
     with st.container(border=True):
         section("✏️", "Check your understanding",
-                "Ten questions on Bell states, entanglement and measurement — with worked solutions.")
-        st.button("Go to the practice questions →", key="lesson_to_practice",
-                  on_click=model.go_to, args=(model.PRACTICE,), type="primary")
+                f"{len(questions)} questions on {module.title.lower()}, with worked solutions.")
+        st.button(f"Practise module {module.number} →", key=f"to_practice_{module.key}",
+                  on_click=model.go_to_practice, args=(module.key,), type="primary")
+
+
+def render() -> None:
+    st.markdown("## 📘 Learn")
+    st.caption(
+        "Eight pages building from a single qubit up to Bell states. Each page ends with practice "
+        "questions, and every circuit opens in the Explore view so you can watch it run."
+    )
+    tabs = st.tabs([m.tab_label for m in MODULES])
+    for tab, module in zip(tabs, MODULES):
+        with tab:
+            _module_page(module)

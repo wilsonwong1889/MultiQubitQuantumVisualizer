@@ -31,7 +31,7 @@ pip install -r requirements-dev.txt
 pytest
 ```
 
-The suite (1,400+ checks) covers the project plan's mathematical tests
+The suite (1,500+ checks) covers the project plan's mathematical tests
 (X|0⟩ = |1⟩, H|0⟩ = |+⟩, Z|+⟩ = |−⟩, H² = X² = Y² = Z² = I, normalisation after
 every gate, unit-length Bloch vectors, the named-state Bloch table), the
 multi-qubit engine (tensor ordering, CNOT/CZ/SWAP, Bell and GHZ states,
@@ -39,25 +39,38 @@ reduced density matrices, Born-rule sampling), a check that each single-qubit
 gate's rotation axis reproduces the amplitude result, the LaTeX formatting, and
 a headless Streamlit `AppTest` smoke test that drives the real UI.
 
-It also **verifies the teaching content**: `tests/test_lesson.py` checks every claim the Bell-state
-lesson makes (each recipe really produces that Bell state, every Bell state is maximally entangled,
-the Φ states correlate and the Ψ states anti-correlate, the disentangling circuit really returns to
-`|00⟩`), and `tests/test_practice.py` re-computes each practice answer from the engine and asserts
-it matches the declared one.
+It also **verifies the teaching content**. `tests/test_curriculum.py` checks the course structure
+(modules numbered in order, each with sections and questions, prerequisites forming a chain) and
+every claim the lessons make — `H²=I`, `HZH=X`, `S²=Z`, `T²=S`, that phase gates never change
+computational-basis probabilities, that single-qubit gates can never entangle, and that a superposed
+control does. `tests/test_lesson.py` does the same for the Bell-state module, and
+`tests/test_practice.py` re-computes each of the 38 practice answers from the engine and asserts it
+matches the declared one.
 
 ## Three views
 
 * **🔬 Explore** — the sandbox: build a circuit and step through it.
-* **📘 Lesson: Bell states** — a seven-part guided lesson on entanglement: where Bell states
-  come from, the four of them and their recipes, a proof that they cannot be factorised, what
-  measurement reveals, how to undo entanglement, and GHZ states. Every section has a button that
-  loads its circuit into Explore.
-* **✏️ Practice** — ten questions (warm-up → challenge) with hints, checked answers, worked
-  solutions and score tracking. Each question can open its own circuit in Explore so you can
-  verify the answer with the simulator.
+* **📘 Learn** — an eight-page course, one tab per module, building from a single qubit up to Bell
+  states. Every section has a button that loads its circuit into Explore.
+* **✏️ Practice** — 38 questions, tabbed by module and graded warm-up → challenge, with hints,
+  checked answers, worked solutions and per-module score tracking. Each question can open its own
+  circuit in Explore so you can verify the answer with the simulator.
 
-Every answer and every factual claim in the lesson is **re-derived from the quantum engine by the
+Every answer and every factual claim in the course is **re-derived from the quantum engine by the
 test suite**, so the teaching material cannot drift from the physics it is teaching.
+
+### The course
+
+| # | Module | What it covers | Sections | Questions |
+|---|---|---|---|---|
+| 1 | 🎲 **Qubits & superposition** | What a qubit is, what the numbers in front of the kets mean, and why superposition is not just uncertainty. | 4 | 4 |
+| 2 | 🎯 **Measurement** | The Born rule, why amplitudes get squared, and what collapse means for the rest of your circuit. | 3 | 4 |
+| 3 | 🌐 **The Bloch sphere** | The picture that makes phase visible: every single-qubit state as a point on a sphere. | 3 | 4 |
+| 4 | 🎛️ **Single-qubit gates** | X, Y, Z and H as matrices — and as rotations of the Bloch sphere. | 4 | 4 |
+| 5 | 🌀 **Phase gates: S and T** | Smaller rotations about the Z axis — and why they matter even though they never change the odds. | 3 | 4 |
+| 6 | 🔢 **Two qubits** | Tensor products, four basis states, and what it means for two qubits to be independent. | 3 | 4 |
+| 7 | 🎚️ **Controlled gates** | CNOT, CZ and SWAP — the gates that let one qubit's state depend on another's. | 3 | 4 |
+| 8 | 🔗 **Bell states** | The four maximally entangled two-qubit states — how to build them, why they cannot be taken apart, and what measurement reveals. | 7 | 10 |
 
 ## What you can do in the app
 
@@ -100,13 +113,14 @@ MultiQubitQuantumVisualizer/
     bloch_sphere.py           Plotly 3D spheres, arrows, paths and animation
     measurement_panel.py      Probability bars + sampling experiment
     gate_panel.py             Gate reference
-    lesson_panel.py           The Bell-state lesson view
-    practice_panel.py         Practice questions with answer checking
+    lesson_panel.py           The Learn view — one tab per module
+    practice_panel.py         Practice questions with answer checking, tabbed by module
     theme.py, widgets.py      CSS and small widget helpers
   data/
     gate_descriptions.py      Plain-language descriptions per gate
     presets.py                One-click example circuits
-    lesson.py                 Bell-state lesson content + the circuits it refers to
+    lesson.py                 Section/Module/CircuitSpec types + the Bell-state sections
+    curriculum.py             The eight modules and the circuits they refer to
     practice.py               Practice questions, answers, solutions and verifiers
   utils/
     format_state.py           Exact LaTeX for 0, ±1, ±i, ±1/√2, e^{iπ/4} ...

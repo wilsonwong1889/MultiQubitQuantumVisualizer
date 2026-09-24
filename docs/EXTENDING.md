@@ -106,14 +106,33 @@ Ideas that slot straight in:
 * **Different measurement bases** — rotate into the basis first
   (`apply_gate(state, H, (q,))` for the X basis) and sample as usual.
 
+## Adding a module to the course
+
+The course is a list of `Module`s in `data/curriculum.py`, rendered as one tab per module in both
+the Learn and Practice views. To add one:
+
+```python
+Module(
+    key="teleportation", number=9, title="Teleportation", icon="📡",
+    summary="One line, shown under the page title.",
+    prerequisite="bell",                 # the module this one follows
+    sections=(Section(...), ...),
+)
+```
+
+Append it to `MODULES`, give it at least one `Question` in `data/practice.py` tagged
+`module="teleportation"`, and it appears — `tests/test_curriculum.py` enforces that every module is
+numbered in order, has sections and questions, and chains to its predecessor.
+
 ## Adding lessons and practice questions
 
 Teaching content lives in `data/` and is rendered by `components/lesson_panel.py` and
 `components/practice_panel.py`.
 
-**A lesson section** is a `Section` in `data/lesson.py`: a title, markdown body, optional display
-equations, an optional `CircuitSpec` (which becomes a "try it in Explore" button) and a one-line
-takeaway. Append it to `SECTIONS` and it appears in order.
+**A lesson section** is a `Section` (defined in `data/lesson.py`): a title, markdown body, optional
+display equations, an optional `CircuitSpec` (which becomes a "try it in Explore" button) and a
+one-line takeaway, which the tests require. Add it to the `sections` tuple of a module in
+`data/curriculum.py`.
 
 **A practice question** is a `Question` in `data/practice.py`:
 

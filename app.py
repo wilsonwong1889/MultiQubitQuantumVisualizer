@@ -40,8 +40,8 @@ st.set_page_config(page_title="Multi-Qubit Quantum Visualizer", page_icon="⚛�
 def header() -> None:
     st.title("⚛️ Multi-Qubit Quantum Visualizer")
     st.caption("See how quantum gates transform qubits — visually, algebraically, and on the Bloch sphere. "
-               "Build a circuit and step through it, work through the Bell-state lesson, or test "
-               "yourself on the practice questions.")
+               "**Explore** to build circuits, **Learn** for an eight-part course from a single qubit up "
+               "to Bell states, and **Practice** to test yourself.")
     choose("View", model.VIEWS, key="view", default=model.EXPLORE, label_visibility="collapsed")
 
 

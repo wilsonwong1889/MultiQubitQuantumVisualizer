@@ -18,7 +18,7 @@ MAX_OPERATIONS = 12
 QUBIT_OPTIONS = [1, 2, 3]
 SHOT_OPTIONS = [1, 10, 100, 1000]
 
-EXPLORE, LESSON, PRACTICE = "🔬 Explore", "📘 Lesson: Bell states", "✏️ Practice"
+EXPLORE, LESSON, PRACTICE = "🔬 Explore", "📘 Learn", "✏️ Practice"
 VIEWS = [EXPLORE, LESSON, PRACTICE]
 
 
@@ -36,6 +36,7 @@ def init_session() -> None:
     s.setdefault("view", VIEWS[0])
     s.setdefault("answers", {})        # question key -> chosen option
     s.setdefault("checked", set())     # question keys the student has submitted
+    s.setdefault("active_module", "qubits")
     for q in range(MAX_QUBITS):
         s.setdefault(f"init_{q}", "0")
 
@@ -196,13 +197,45 @@ def reset_practice() -> None:
     s.checked = set()
 
 
+def _score_over(keys):
+    s = ss()
+    from data.practice import QUESTIONS_BY_KEY
+    answered = [k for k in keys if k in s.checked]
+    correct = sum(1 for k in answered if QUESTIONS_BY_KEY[k].is_correct(s.answers.get(k)))
+    return correct, len(answered)
+
+
 def practice_score():
     """(number correct, number answered) over the whole question set."""
     from data.practice import QUESTIONS_BY_KEY
+    return _score_over(QUESTIONS_BY_KEY)
+
+
+def module_score(module_key: str):
+    """(number correct, number answered) within one curriculum module."""
+    from data.practice import questions_for
+    return _score_over([q.key for q in questions_for(module_key)])
+
+
+def reset_module(module_key: str) -> None:
+    from data.practice import questions_for
     s = ss()
-    answered = [k for k in s.checked if k in QUESTIONS_BY_KEY]
-    correct = sum(1 for k in answered if QUESTIONS_BY_KEY[k].is_correct(s.answers.get(k)))
-    return correct, len(answered)
+    keys = {q.key for q in questions_for(module_key)}
+    for key in keys:
+        s[f"choice_{key}"] = None
+    s.answers = {k: v for k, v in s.answers.items() if k not in keys}
+    s.checked = set(s.checked) - keys
+
+
+def go_to_lesson(module_key: str) -> None:
+    """Open the Learn view on a particular module."""
+    go_to(LESSON)
+    ss().active_module = module_key
+
+
+def go_to_practice(module_key: str) -> None:
+    go_to(PRACTICE)
+    ss().active_module = module_key
 
 
 def load_selected_preset() -> None:

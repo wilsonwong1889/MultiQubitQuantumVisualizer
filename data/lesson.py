@@ -33,6 +33,23 @@ class CircuitSpec:
 
 
 @dataclass(frozen=True)
+class Module:
+    """One page of the course: a few lesson sections plus its practice questions."""
+
+    key: str
+    number: int
+    title: str
+    icon: str
+    summary: str                    # one line, shown under the page title
+    sections: Tuple["Section", ...]
+    prerequisite: str = ""          # key of the module this one follows
+
+    @property
+    def tab_label(self) -> str:
+        return f"{self.icon} {self.number}. {self.title}"
+
+
+@dataclass(frozen=True)
 class Section:
     key: str
     title: str

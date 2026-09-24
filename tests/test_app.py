@@ -151,7 +151,7 @@ def test_all_three_views_render(app):
 def test_lesson_try_it_loads_the_circuit_and_returns_to_explore(app):
     app.session_state["view"] = model.LESSON
     app.run()
-    app.button(key="lesson_try_build").click().run()
+    app.button(key="lesson_try_bell_build").click().run()
     assert app.session_state["view"] == model.EXPLORE
     assert app.session_state["num_qubits"] == 2
     assert app.session_state["ops"] == [("H", (0,)), ("CNOT", (0, 1))]
@@ -161,8 +161,9 @@ def test_lesson_try_it_loads_the_circuit_and_returns_to_explore(app):
 def test_lesson_links_to_practice(app):
     app.session_state["view"] = model.LESSON
     app.run()
-    app.button(key="lesson_to_practice").click().run()
+    app.button(key="to_practice_bell").click().run()
     assert app.session_state["view"] == model.PRACTICE
+    assert app.session_state["active_module"] == "bell"
 
 
 def test_practice_marks_a_correct_answer(app):
@@ -212,9 +213,39 @@ def test_answering_every_question_correctly_scores_full_marks(app):
     for q in QUESTIONS:
         app.radio(key=f"choice_{q.key}").set_value(q.answer).run()
         app.button(key=f"check_{q.key}").click().run()
+        assert not app.exception, f"{q.key}: {app.exception}"
     assert _score(app) == (len(QUESTIONS), len(QUESTIONS))
-    assert any("Every question correct" in s.value for s in app.success)
-    assert not app.exception
+    # each module reports its own perfect score
+    assert sum("correct" in s.value for s in app.success) >= 8
+
+
+def test_resetting_one_module_leaves_the_others_untouched(app):
+    from data.practice import QUESTIONS, questions_for
+    app.session_state["view"] = model.PRACTICE
+    app.run()
+    for q in QUESTIONS:
+        app.radio(key=f"choice_{q.key}").set_value(q.answer).run()
+        app.button(key=f"check_{q.key}").click().run()
+    app.button(key="reset_qubits").click().run()
+    expected = len(QUESTIONS) - len(questions_for("qubits"))
+    assert _score(app) == (expected, expected)
+    assert not any(q.key in app.session_state["checked"] for q in questions_for("qubits"))
+
+
+def test_each_lesson_module_can_load_all_of_its_circuits(app):
+    from data.curriculum import MODULES
+    app.session_state["view"] = model.LESSON
+    app.run()
+    for module in MODULES:
+        for sec in module.sections:
+            if sec.circuit is None:
+                continue
+            app.button(key=f"lesson_try_{module.key}_{sec.key}").click().run()
+            assert not app.exception, f"{module.key}/{sec.key}: {app.exception}"
+            assert app.session_state["view"] == model.EXPLORE
+            assert app.session_state["num_qubits"] == sec.circuit.num_qubits
+            app.session_state["view"] = model.LESSON
+            app.run()
 
 
 def test_practice_question_opens_its_circuit_in_explore(app):
