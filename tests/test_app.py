@@ -8,6 +8,8 @@ from pathlib import Path
 import pytest
 from streamlit.testing.v1 import AppTest
 
+import model
+
 APP_PATH = str(Path(__file__).resolve().parent.parent / "app.py")
 
 
@@ -126,3 +128,101 @@ def test_gate_limit_is_enforced(app):
     assert len(app.session_state["ops"]) == 12
     assert app.button(key="add_X").disabled          # no 13th gate
     assert app.session_state["step"] == 12
+
+
+# --- lesson and practice views -------------------------------------------------------
+def _score(at):
+    """(correct, answered) computed from the app's session state."""
+    from data.practice import QUESTIONS_BY_KEY
+    answered = [k for k in at.session_state["checked"] if k in QUESTIONS_BY_KEY]
+    correct = sum(1 for k in answered
+                  if QUESTIONS_BY_KEY[k].is_correct(at.session_state["answers"].get(k)))
+    return correct, len(answered)
+
+
+
+def test_all_three_views_render(app):
+    for view in model.VIEWS:
+        app.session_state["view"] = view
+        app.run()
+        assert not app.exception, f"{view}: {app.exception}"
+
+
+def test_lesson_try_it_loads_the_circuit_and_returns_to_explore(app):
+    app.session_state["view"] = model.LESSON
+    app.run()
+    app.button(key="lesson_try_build").click().run()
+    assert app.session_state["view"] == model.EXPLORE
+    assert app.session_state["num_qubits"] == 2
+    assert app.session_state["ops"] == [("H", (0,)), ("CNOT", (0, 1))]
+    assert not app.exception
+
+
+def test_lesson_links_to_practice(app):
+    app.session_state["view"] = model.LESSON
+    app.run()
+    app.button(key="lesson_to_practice").click().run()
+    assert app.session_state["view"] == model.PRACTICE
+
+
+def test_practice_marks_a_correct_answer(app):
+    from data.practice import QUESTIONS
+    q = QUESTIONS[0]
+    app.session_state["view"] = model.PRACTICE
+    app.run()
+    app.radio(key=f"choice_{q.key}").set_value(q.answer).run()
+    app.button(key=f"check_{q.key}").click().run()
+    assert app.session_state["answers"][q.key] == q.answer
+    assert _score(app) == (1, 1)
+    assert any("Correct" in s.value for s in app.success)
+
+
+def test_practice_marks_a_wrong_answer_and_allows_retry(app):
+    from data.practice import QUESTIONS
+    q = QUESTIONS[1]
+    wrong = next(o for o in q.options if o != q.answer)
+    app.session_state["view"] = model.PRACTICE
+    app.run()
+    app.radio(key=f"choice_{q.key}").set_value(wrong).run()
+    app.button(key=f"check_{q.key}").click().run()
+    assert _score(app) == (0, 1)
+    assert any("Not quite" in e.value for e in app.error)
+    app.button(key=f"retry_{q.key}").click().run()
+    assert q.key not in app.session_state["checked"]
+    assert _score(app) == (0, 0)
+
+
+def test_practice_reset_clears_every_answer(app):
+    from data.practice import QUESTIONS
+    app.session_state["view"] = model.PRACTICE
+    app.run()
+    for q in QUESTIONS[:3]:
+        app.radio(key=f"choice_{q.key}").set_value(q.answer).run()
+        app.button(key=f"check_{q.key}").click().run()
+    assert _score(app) == (3, 3)
+    app.button(key="reset_practice").click().run()
+    assert app.session_state["answers"] == {}
+    assert _score(app) == (0, 0)
+
+
+def test_answering_every_question_correctly_scores_full_marks(app):
+    from data.practice import QUESTIONS
+    app.session_state["view"] = model.PRACTICE
+    app.run()
+    for q in QUESTIONS:
+        app.radio(key=f"choice_{q.key}").set_value(q.answer).run()
+        app.button(key=f"check_{q.key}").click().run()
+    assert _score(app) == (len(QUESTIONS), len(QUESTIONS))
+    assert any("Every question correct" in s.value for s in app.success)
+    assert not app.exception
+
+
+def test_practice_question_opens_its_circuit_in_explore(app):
+    from data.practice import QUESTIONS_BY_KEY
+    q = QUESTIONS_BY_KEY["q8_cz"]
+    app.session_state["view"] = model.PRACTICE
+    app.run()
+    app.button(key=f"explore_{q.key}").click().run()
+    assert app.session_state["view"] == model.EXPLORE
+    assert app.session_state["ops"] == [("CZ", (0, 1))]
+    assert app.session_state["init_0"] == "+" and app.session_state["init_1"] == "+"

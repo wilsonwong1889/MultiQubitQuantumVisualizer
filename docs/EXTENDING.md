@@ -106,6 +106,36 @@ Ideas that slot straight in:
 * **Different measurement bases** — rotate into the basis first
   (`apply_gate(state, H, (q,))` for the X basis) and sample as usual.
 
+## Adding lessons and practice questions
+
+Teaching content lives in `data/` and is rendered by `components/lesson_panel.py` and
+`components/practice_panel.py`.
+
+**A lesson section** is a `Section` in `data/lesson.py`: a title, markdown body, optional display
+equations, an optional `CircuitSpec` (which becomes a "try it in Explore" button) and a one-line
+takeaway. Append it to `SECTIONS` and it appears in order.
+
+**A practice question** is a `Question` in `data/practice.py`:
+
+```python
+Question(
+    key="q11_teleport", difficulty="Challenge",
+    prompt="...", options=("A", "B", "C"), answer="B",
+    solution="...",                      # markdown, shown after checking
+    verify=lambda: _bell_name(("0", "0")),   # recomputes the answer from the engine
+    hint="...", circuit=SOME_CIRCUIT_SPEC,
+)
+```
+
+The `verify` callable is the important part: it must **derive** the answer from
+`quantum/` rather than restate it. `tests/test_practice.py` asserts
+`question.verify() == question.answer` for every question, so a question whose maths
+is wrong fails the build instead of teaching a student the wrong thing. Do the same
+for any numeric claim you put in a lesson section — add an assertion to
+`tests/test_lesson.py`.
+
+`difficulty` must be one of `DIFFICULTIES`; questions are grouped by it in the UI.
+
 ## Where the maths formatting lives
 
 `utils/format_state.py` turns amplitudes into exact LaTeX (`1/√2`, `i`,

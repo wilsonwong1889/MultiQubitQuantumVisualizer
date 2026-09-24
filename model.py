@@ -18,6 +18,9 @@ MAX_OPERATIONS = 12
 QUBIT_OPTIONS = [1, 2, 3]
 SHOT_OPTIONS = [1, 10, 100, 1000]
 
+EXPLORE, LESSON, PRACTICE = "🔬 Explore", "📘 Lesson: Bell states", "✏️ Practice"
+VIEWS = [EXPLORE, LESSON, PRACTICE]
+
 
 def ss():
     return st.session_state
@@ -30,6 +33,9 @@ def init_session() -> None:
     s.setdefault("step", 0)
     s.setdefault("preset_note", None)
     s.setdefault("measurement", None)
+    s.setdefault("view", VIEWS[0])
+    s.setdefault("answers", {})        # question key -> chosen option
+    s.setdefault("checked", set())     # question keys the student has submitted
     for q in range(MAX_QUBITS):
         s.setdefault(f"init_{q}", "0")
 
@@ -142,6 +148,61 @@ def load_preset(preset: Preset) -> None:
     set_step(len(s.ops))
     s.measurement = None
     s.preset_note = f"**{preset.label}** — {preset.concept}"
+
+
+def go_to(view: str) -> None:
+    s = ss()
+    s.view = view
+    s["__view_last"] = view
+
+
+def load_circuit_spec(spec, note: str = "", *, switch_to_explore: bool = True) -> None:
+    """Load a CircuitSpec from the lesson or a practice question into Explore."""
+    s = ss()
+    s.num_qubits = spec.num_qubits
+    s.qubit_count = spec.num_qubits
+    s["__qubit_count_last"] = spec.num_qubits
+    for q, key in enumerate(spec.initial):
+        s[f"init_{q}"] = key
+        s[f"__init_{q}_last"] = key
+    s.ops = [(sym, tuple(t)) for sym, t in spec.operations]
+    set_step(len(s.ops))
+    s.measurement = None
+    s.preset_note = note or None
+    if switch_to_explore:
+        go_to(EXPLORE)
+
+
+# --- practice answers ----------------------------------------------------------------
+def record_answer(question_key: str) -> None:
+    """Remember the chosen option and mark the question as submitted."""
+    s = ss()
+    s.answers = {**s.answers, question_key: s.get(f"choice_{question_key}")}
+    s.checked = set(s.checked) | {question_key}
+
+
+def clear_answer(question_key: str) -> None:
+    s = ss()
+    s.answers = {k: v for k, v in s.answers.items() if k != question_key}
+    s.checked = set(s.checked) - {question_key}
+    s[f"choice_{question_key}"] = None
+
+
+def reset_practice() -> None:
+    s = ss()
+    for key in list(s.answers):
+        s[f"choice_{key}"] = None
+    s.answers = {}
+    s.checked = set()
+
+
+def practice_score():
+    """(number correct, number answered) over the whole question set."""
+    from data.practice import QUESTIONS_BY_KEY
+    s = ss()
+    answered = [k for k in s.checked if k in QUESTIONS_BY_KEY]
+    correct = sum(1 for k in answered if QUESTIONS_BY_KEY[k].is_correct(s.answers.get(k)))
+    return correct, len(answered)
 
 
 def load_selected_preset() -> None:

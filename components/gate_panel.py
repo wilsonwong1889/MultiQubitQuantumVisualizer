@@ -8,7 +8,7 @@ import streamlit as st
 from components.widgets import section
 from data.gate_descriptions import GATE_DESCRIPTIONS
 from quantum.gates import GATES, SINGLE_QUBIT_GATES, TWO_QUBIT_GATES, Gate
-from utils.format_state import gate_symbol_latex, matrix_latex
+from utils.format_state import gate_symbol_latex, matrix_latex, table_cell
 
 
 def _gate_matrix_latex(gate: Gate) -> str:
@@ -38,5 +38,6 @@ def render(gate: Optional[Gate]) -> None:
             for symbol in symbols:
                 g = GATES[symbol]
                 d = GATE_DESCRIPTIONS[symbol]
-                rows.append(f"| **{symbol}** — {g.name} | ${_gate_matrix_latex(g)}$ | {g.description} | {d.bloch} |")
+                rows.append(f"| **{symbol}** — {g.name} | ${_gate_matrix_latex(g)}$ | "
+                            f"{table_cell(g.description)} | {table_cell(d.bloch)} |")
             st.markdown("\n".join(rows))

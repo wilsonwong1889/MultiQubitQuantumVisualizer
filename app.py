@@ -19,28 +19,30 @@ from components import (
     controls,
     explanation,
     gate_panel,
+    lesson_panel,
     matrix_calculation,
     measurement_panel,
+    practice_panel,
     state_panel,
     theme,
     toolbar,
 )
-from components.widgets import section
+from components.widgets import choose, section
 from quantum.bloch import bloch_vector
 from quantum.circuit import simulate_circuit
 from quantum.state import BELL_STATES, NAMED_STATES
-from utils.format_state import complex_latex, coordinate_text
+from utils.format_state import complex_latex, coordinate_text, table_cell
 
 st.set_page_config(page_title="Multi-Qubit Quantum Visualizer", page_icon="⚛️", layout="wide",
                    initial_sidebar_state="collapsed")
 
 
 def header() -> None:
-    c_title, c_badge = st.columns([4, 1], vertical_alignment="center")
-    with c_title:
-        st.title("⚛️ Multi-Qubit Quantum Visualizer")
-        st.caption("See how quantum gates transform qubits — visually, algebraically, and on the Bloch sphere. "
-                   "Build a circuit, then step through it one gate at a time.")
+    st.title("⚛️ Multi-Qubit Quantum Visualizer")
+    st.caption("See how quantum gates transform qubits — visually, algebraically, and on the Bloch sphere. "
+               "Build a circuit and step through it, work through the Bell-state lesson, or test "
+               "yourself on the practice questions.")
+    choose("View", model.VIEWS, key="view", default=model.EXPLORE, label_visibility="collapsed")
 
 
 def reference_expanders() -> None:
@@ -57,7 +59,7 @@ def reference_expanders() -> None:
         for name, _latex, named in NAMED_STATES:
             x, y, z = bloch_vector(named)
             rows.append(
-                f"| {name} | $\\alpha = {complex_latex(named.alpha)},\\ \\beta = {complex_latex(named.beta)}$ | "
+                f"| {table_cell(name)} | $\\alpha = {complex_latex(named.alpha)},\\ \\beta = {complex_latex(named.beta)}$ | "
                 f"({coordinate_text(x)}, {coordinate_text(y)}, {coordinate_text(z)}) |"
             )
         st.markdown("\n".join(rows))
@@ -96,11 +98,7 @@ def footer() -> None:
     )
 
 
-def main() -> None:
-    model.init_session()
-    theme.inject()
-    header()
-
+def explore_view() -> None:
     toolbar.render()
 
     # Derive everything for the current step from the engine.
@@ -142,6 +140,21 @@ def main() -> None:
     with st.container(border=True):
         gate_panel.render(op.gate_object if op is not None else None)
     reference_expanders()
+
+
+def main() -> None:
+    model.init_session()
+    theme.inject()
+    header()
+
+    view = st.session_state.view
+    if view == model.LESSON:
+        lesson_panel.render()
+    elif view == model.PRACTICE:
+        practice_panel.render()
+    else:
+        explore_view()
+
     footer()
 
 

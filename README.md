@@ -31,13 +31,33 @@ pip install -r requirements-dev.txt
 pytest
 ```
 
-The suite (1,300+ checks) covers the project plan's mathematical tests
+The suite (1,400+ checks) covers the project plan's mathematical tests
 (X|0⟩ = |1⟩, H|0⟩ = |+⟩, Z|+⟩ = |−⟩, H² = X² = Y² = Z² = I, normalisation after
 every gate, unit-length Bloch vectors, the named-state Bloch table), the
 multi-qubit engine (tensor ordering, CNOT/CZ/SWAP, Bell and GHZ states,
 reduced density matrices, Born-rule sampling), a check that each single-qubit
 gate's rotation axis reproduces the amplitude result, the LaTeX formatting, and
 a headless Streamlit `AppTest` smoke test that drives the real UI.
+
+It also **verifies the teaching content**: `tests/test_lesson.py` checks every claim the Bell-state
+lesson makes (each recipe really produces that Bell state, every Bell state is maximally entangled,
+the Φ states correlate and the Ψ states anti-correlate, the disentangling circuit really returns to
+`|00⟩`), and `tests/test_practice.py` re-computes each practice answer from the engine and asserts
+it matches the declared one.
+
+## Three views
+
+* **🔬 Explore** — the sandbox: build a circuit and step through it.
+* **📘 Lesson: Bell states** — a seven-part guided lesson on entanglement: where Bell states
+  come from, the four of them and their recipes, a proof that they cannot be factorised, what
+  measurement reveals, how to undo entanglement, and GHZ states. Every section has a button that
+  loads its circuit into Explore.
+* **✏️ Practice** — ten questions (warm-up → challenge) with hints, checked answers, worked
+  solutions and score tracking. Each question can open its own circuit in Explore so you can
+  verify the answer with the simulator.
+
+Every answer and every factual claim in the lesson is **re-derived from the quantum engine by the
+test suite**, so the teaching material cannot drift from the physics it is teaching.
 
 ## What you can do in the app
 
@@ -80,10 +100,14 @@ MultiQubitQuantumVisualizer/
     bloch_sphere.py           Plotly 3D spheres, arrows, paths and animation
     measurement_panel.py      Probability bars + sampling experiment
     gate_panel.py             Gate reference
+    lesson_panel.py           The Bell-state lesson view
+    practice_panel.py         Practice questions with answer checking
     theme.py, widgets.py      CSS and small widget helpers
   data/
     gate_descriptions.py      Plain-language descriptions per gate
     presets.py                One-click example circuits
+    lesson.py                 Bell-state lesson content + the circuits it refers to
+    practice.py               Practice questions, answers, solutions and verifiers
   utils/
     format_state.py           Exact LaTeX for 0, ±1, ±i, ±1/√2, e^{iπ/4} ...
   docs/EXTENDING.md           How to add gates, qubits and measurements

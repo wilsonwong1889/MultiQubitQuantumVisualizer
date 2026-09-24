@@ -116,6 +116,20 @@ def basis_ket(label: str) -> str:
     return rf"|{label}\rangle"
 
 
+def table_cell(text: str) -> str:
+    """Escape pipes so a cell containing kets does not split a markdown table.
+
+    "|0⟩" would otherwise be read as a column separator; &#124; renders as a
+    vertical bar but is invisible to the table parser.
+    """
+    return text.replace("|", "&#124;")
+
+
+def ket_vert(label: str) -> str:
+    r"""A ket in LaTeX using \vert, so the cell contains no literal pipe."""
+    return rf"\vert {label}\rangle"
+
+
 def gate_symbol_latex(symbol: str) -> str:
     """Single letters stay italic (H, X); multi-letter names are set upright (CNOT)."""
     return symbol if len(symbol) == 1 else r"\mathrm{%s}" % symbol
@@ -271,7 +285,13 @@ def ket_text(state: QuantumState) -> str:
         elif " " in coefficient:
             coefficient = f"({coefficient})"
         terms.append(f"{coefficient}|{label}⟩")
-    return " + ".join(terms).replace("+ −", "− ") if terms else "0"
+    if not terms:
+        return "0"
+    out = terms[0]
+    for term in terms[1:]:
+        # a leading minus becomes a binary minus: "a + -b" reads as "a − b"
+        out += f" − {term[1:]}" if term.startswith(("-", "−")) else f" + {term}"
+    return out
 
 
 def state_name_text(state: QuantumState) -> str:
